@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="../static/style.css">
+    <title>Medical Chatbot</title>
+</head>
+<body>
+    <div class="wrapper">
+        <div class="header">
+                <h1>Your medical assistant</h1>
+            <p class="moving">Ask any questions you want about healthcare field !!!</p>
+        </div>
+        
+        <div class="chat-area">
+            <div class="chat-box" id="chat-box">
+                <!-- Chat messages will be dynamically appended here -->
+            </div>
+            
+            <div class="typing-area">
+                <input type="text" id="user-msg" placeholder="Write your answer ..." required>
+                <button id="send-btn">
+                    <i class="fa fa-paper-plane"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Add interactivity and handle sending messages
+        document.getElementById("send-btn").addEventListener("click", function () {
+            const userMsg = document.getElementById("user-msg").value;
+            if (!userMsg.trim()) return;
+
+            const chatBox = document.getElementById("chat-box");
+
+            // Append user's message
+            const userBubble = `
+                <div class="chat-message user">
+                    <p><b>${userMsg}</b></p>
+                    <img src="../static/images/user.svg" alt="User Avatar" class="avatar">
+                </div>`;
+            chatBox.innerHTML += userBubble;
+
+            // Show typing animation
+            const typingBubble = `
+                <div class="chat-message bot typing">
+                    <img src="../static/images/chatbot.png" alt="Bot Avatar" class="avatar">
+                    <div class="typing-dots">
+                        <span></span><span></span><span></span>
+                    </div>
+                </div>`;
+            chatBox.innerHTML += typingBubble;
+
+            chatBox.scrollTop = chatBox.scrollHeight;
+
+            // Send message to backend and fetch response
+            fetch("/get", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ msg: userMsg }),
+            })
+                .then((response) => response.json())
+                .then((data) => {
+                    // Remove typing animation
+                    document.querySelector(".typing").remove();
+
+                    // Append bot's response
+                    const botBubble = `
+                        <div class="chat-message bot">
+                            <img src="../static/images/doctor-avatar.png" alt="Bot Avatar" class="avatar">
+                            <p><b>${data.answer}</b></p>
+                        </div>`;
+                    chatBox.innerHTML += botBubble;
+                    chatBox.scrollTop = chatBox.scrollHeight;
+                })
+                .catch((error) => {
+                    console.error("Error:", error);
+                    document.querySelector(".typing").remove();
+                });
+
+            document.getElementById("user-msg").value = ""; // Clear input
+        });
+    </script>
+</body>
+</html>
